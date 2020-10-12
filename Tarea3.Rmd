@@ -1,0 +1,77 @@
+---
+title: "tarea3"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE, warning=FALSE, echo = FALSE}
+library(factoextra)
+```
+## Pregunta 4
+
+Primero importaremos los datos de T8-4.DAT
+
+```{r}
+t8_4 <-  read.table("~/aplicada3/tarea3/T8-4.DAT", quote="\"", comment.char="")
+```
+
+Luego calcularemos la matriz muestral de covarianzas y los componentes principales
+
+```{r}
+(S <- var(t8_4))
+
+
+comp_prin <- princomp(t8_4)
+summary(comp_prin, loadings = T)
+```
+
+La gráfica de codo de los componentes principales es la siguiente: 
+```{r , echo=FALSE}
+fviz_screeplot(comp_prin)
+```
+
+La inflexión más grande en la gráfica se da del primer al segundo componente, pero hasta el tercer componente es que se acumula almenos 80 porciento de la varianza por lo que se decide tomar los tres primeros componentes como los más significativos.
+
+Además, si graficamos los datos en los dos primeros componentes : 
+```{r , echo=FALSE}
+fviz_pca_biplot(comp_prin)
+```
+
+Podemos notar que el primer componente está correlacionado positivamente con las tasas de rendimiento de las 5 acciones, pero principalmente con la accion 1, 2 y 3. Así, podemos interpretar el primer componente como un promedio ponderado de las tasas de rendimiento donde se da mayor importancia a las acciones 1, 2 y 3. El segundo componente, por otro lado, se correlaciona positivamente con la primera accion y negativamente con la tercera. Interpretamos que el segundo componente es un contraste entre la primera y tercera acción
+
+Se procederá construyendo intervalos simultáneos bonferronizados de 90% para las varianzas de los tres primeros componentes principales. Recordemos que la varianza de cada componente principal muestral es el eigenvalor muestral asociado y que se distribuye aproximadamente normal con media igual al eigenvalor poblacional y varianza $2\frac{\lambda_i^{2}}{n}$. Así podemos construir el intervalo basado en la t de studen y ajustamos el nivel de confianza para que conjuntamente se tenga 90%
+
+```{r}
+
+lambdas <- comp_prin$sdev^2
+
+(lambdas <- lambdas[1:3])
+
+n = 100 #numero de observaciones
+m = 3 # número de intervalos simultaneos
+alpha <- 0.1 #intervalo al 1-alpha% = 90% nivel de confianza
+cuantil_normal = qnorm(alpha/(2*m), lower.tail=FALSE)
+
+for(l in lambdas){
+  cat("\nIntervalo para ", l, " : (", c(l/(1 + cuantil_normal*sqrt(2/n))), l/(1 - cuantil_normal*sqrt(2/n)), ")")
+}
+
+```
+De las gráficas anteriores podemos conluir que sí es posible resumir la variabilidad en menos de 5 dimensiones, pues los tres primeros componentes acumulan más del 80% de varianza y aunque se pierde algo de información, la reducción de dimensionalidad trae beneficios de interpretación.
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
