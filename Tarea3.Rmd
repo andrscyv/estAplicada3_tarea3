@@ -9,6 +9,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r, message=FALSE, warning=FALSE, echo = FALSE}
 library(factoextra)
+library(MASS)
 ```
 ## Pregunta 4
 
@@ -20,7 +21,7 @@ t8_4 <-  read.table("~/aplicada3/tarea3/T8-4.DAT", quote="\"", comment.char="")
 
 Luego calcularemos la matriz muestral de covarianzas y los componentes principales
 
-```{r}
+```{r, echo=FALSE}
 (S <- var(t8_4))
 
 
@@ -42,9 +43,9 @@ fviz_pca_biplot(comp_prin)
 
 Podemos notar que el primer componente está correlacionado positivamente con las tasas de rendimiento de las 5 acciones, pero principalmente con la accion 1, 2 y 3. Así, podemos interpretar el primer componente como un promedio ponderado de las tasas de rendimiento donde se da mayor importancia a las acciones 1, 2 y 3. El segundo componente, por otro lado, se correlaciona positivamente con la primera accion y negativamente con la tercera. Interpretamos que el segundo componente es un contraste entre la primera y tercera acción
 
-Se procederá construyendo intervalos simultáneos bonferronizados de 90% para las varianzas de los tres primeros componentes principales. Recordemos que la varianza de cada componente principal muestral es el eigenvalor muestral asociado y que se distribuye aproximadamente normal con media igual al eigenvalor poblacional y varianza $2\frac{\lambda_i^{2}}{n}$. Así podemos construir el intervalo basado en la t de studen y ajustamos el nivel de confianza para que conjuntamente se tenga 90%
+Se procederá construyendo intervalos simultáneos bonferronizados de 90% para las varianzas de los tres primeros componentes principales. Recordemos que la varianza de cada componente principal muestral es el eigenvalor muestral asociado y que se distribuye aproximadamente normal con media igual al eigenvalor poblacional y varianza $2\frac{\lambda_i^{2}}{n}$. Así podemos construir el intervalo basado en la distribución normal y ajustamos el nivel de confianza para que conjuntamente se tenga 90%
 
-```{r}
+```{r, echo=FALSE}
 
 lambdas <- comp_prin$sdev^2
 
@@ -62,16 +63,316 @@ for(l in lambdas){
 ```
 De las gráficas anteriores podemos conluir que sí es posible resumir la variabilidad en menos de 5 dimensiones, pues los tres primeros componentes acumulan más del 80% de varianza y aunque se pierde algo de información, la reducción de dimensionalidad trae beneficios de interpretación.
 
-```{r cars}
-summary(cars)
+Ahora repetiremos el análisis para datos de acciones de 2017
+
+Cargamos los datos 
+
+```{r}
+datos17 <- read.csv("~/aplicada3/tarea3/AccionesBMV2017.csv")
 ```
 
-## Including Plots
+Quitamos las fechas
 
-You can also embed plots, for example:
+```{r}
+datos17 <- datos17[ , 2:7]
+```
+Luego calcularemos la matriz muestral de covarianzas y los componentes principales
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r, echo=FALSE}
+(S <- var(datos17))
+
+
+comp_prin <- princomp(datos17)
+summary(comp_prin, loadings = T)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+La gráfica de codo de los componentes principales es la siguiente: 
+```{r , echo=FALSE}
+fviz_screeplot(comp_prin)
+```
+
+La inflexión más grande en la gráfica se da del primer al segundo componente, pero hasta el segundo componente es que se acumula almenos 80 porciento de la varianza por lo que se decide tomar los dos primeros componentes
+
+De las cargas podemos ver que el primer componente es un promedio ponderado de MSFT y ELEKTRA, el cual acumula 76% de la varianza. El segundo componente es un contraste entre las mismas variables y acumula 23% de la varianza. Conjuntamente, los componentes acumulan 99% de la varianza.
+
+Se procederá construyendo intervalos simultáneos bonferronizados de 90% para las varianzas de los tres primeros componentes principales.
+
+```{r, echo=FALSE}
+
+lambdas <- comp_prin$sdev^2
+
+(lambdas <- lambdas[1:3])
+
+n = 251 #numero de observaciones
+m = 3 # número de intervalos simultaneos
+alpha <- 0.1 #intervalo al 1-alpha% = 90% nivel de confianza
+cuantil_normal = qnorm(alpha/(2*m), lower.tail=FALSE)
+
+for(l in lambdas){
+  cat("\nIntervalo para ", l, " : (", c(l/(1 + cuantil_normal*sqrt(2/n))), l/(1 - cuantil_normal*sqrt(2/n)), ")")
+}
+
+```
+De las gráficas anteriores podemos conluir que sí es posible resumir la variabilidad en menos de 5 dimensiones, pues los dos primeros componentes acumulan 99% de varianza.
+
+## Pregunta 6
+
+Primero importaremos los datos de T1-10.DAT
+
+```{r}
+t1_10 <- read.table("~/aplicada3/tarea3/T1-10.DAT", quote="\"", comment.char="")
+colnames(t1_10)<- c("Raza","PVenta","YrHgt","FtFreBody","PrctFFB","Frame","BkFat","SaleHt","SaleWt")
+```
+ 
+ y descartamos las dos primeras variables
+ 
+```{r}
+t1_10 <- t1_10[, 3:9]
+```
+ 
+Los siguientes incisos se harán para los componentes principales basados en la matriz de covarianza como en la matriz de correlaciones
+
+a) Determinemos el número de componentes que resumen adecuadamente la variabilidad
+
+```{r, echo=FALSE}
+comp_cov <-princomp(t1_10, cor = FALSE)
+comp_cor <-princomp(t1_10, cor = TRUE)
+```
+
+Usando la covarianza tenemos:
+```{r, echo=FALSE}
+summary(comp_cov, loadings = T)
+```
+
+
+```{r, echo=FALSE}
+fviz_screeplot(comp_cov)
+```
+
+Podemos ver la inflexión muy marcada del segundo al tercer componente. Los primeros dos componentes acumulan más del 95% de la variabilidad. Aunque podriamos elegir sólo el primer componente (ya que acumula 80% de variabilidad) preferimos optar por el criterio de la gráfica de codo y elegimos las dos primeras componentes.
+
+Usando la correlación:
+```{r, echo=FALSE}
+summary(comp_cor, loadings = T)
+```
+
+```{r, echo=FALSE}
+fviz_screeplot(comp_cor)
+```
+
+Aquí la gráfica muestra una curva más suave, y es hasta el tercer componente que se acumula almenos 80% de la variabilidad, por lo que en este caso elegimos los tres primeros componentes para resumir la variabilidad.
+
+b) Interpretación de los componentes principales
+
+# Covarianza
+
+```{r , echo=FALSE}
+fviz_pca_biplot(comp_cov)
+```
+De la gráfica y de las cargas podemos ver que el primer componente es un promedio ponderado del cuerpo libre de grasa y de peso de ventas, mientras que el segundo es un contraste entre las mismas variables
+
+# Correlacion
+
+```{r , echo=FALSE}
+fviz_pca_biplot(comp_cor)
+```
+```{r, echo=FALSE}
+fviz_pca_biplot(comp_cor, axes = c(2,3))
+```
+
+De las gráficas y las cargas notamos que el primer componente es un promedio ponderado donde todas las variables tienen pesos significativos y la grasa trasera tiene signo negativo. El segundo componente es un contraste entre porcentaje del cuerpo libre de grasa con grasa trasera y peso de venta. El tercer componente contrasta medicion al hombro y porcentaje del cuerpo libre de grasa
+
+c)
+
+Sí es posible desarrollar un índice "Configuración del cuerpo" pues el primer componente principal usando la correlación es una ponderación de las variables que determinan la configuración del cuerpo del animal y cuenta para una buena proporcion de la varianza ( aprox 60% )
+
+d) Outliers
+
+
+```{r , echo=FALSE}
+fviz_pca_biplot(comp_cov, invisible=c("var"))
+```
+Considerando los componentes basados en la covarianza vemos que hay dos candidatos a outliers la observación 50 y la 51
+
+e) Ahora evaluaremos si los dotas son normales. Para esto mostraremos las gráficas QQ de cada variable y la transformacion que le aplicaremos
+```{r}
+graficaQQ <- function (col, nom) {
+  qqnorm(col,  pch=1,frame=FALSE, main = paste("Gráfica QQ ", nom))
+  qqline(col, col = "steelblue",lwd=2)
+}
+```
+
+# YrHgt
+```{r}
+  graficaQQ(t1_10$YrHgt, "YrHgt")
+```
+Parece ser aproximadamente normal
+
+# FtFreBody
+
+```{r}
+  graficaQQ(t1_10$FtFreBody, "FtFreBody")
+```
+Aplicando la transformacion logaritmo
+```{r}
+  graficaQQ(log(t1_10$FtFreBody), "log(FtFreBody)")
+```
+
+# PrctFFB
+```{r}
+  graficaQQ(t1_10$PrctFFB, "PrctFFb")
+```
+Utilizando el recíproco:
+```{r}
+  graficaQQ(t1_10$PrctFFB^-1, "PrctFFb^-1")
+```
+
+# Frame y BkFat
+```{r}
+  graficaQQ(t1_10$Frame, "Frame")
+```
+```{r}
+  graficaQQ(t1_10$BkFat, "BkFat")
+```
+Como podemos ver, estas variables tienen mediciones discretas por lo que no se aplicaron transformaciones.
+# SaleHt
+```{r}
+  graficaQQ(t1_10$SaleHt, "SaleHt")
+```
+Parece cumplir normalidad
+
+#SaleWt
+```{r}
+  graficaQQ(t1_10$SaleWt, "SaleWt")
+```
+Parece cumplir normalidad
+
+Pasamos a transformar nuestros datos
+```{r}
+t1_10$FtFreBody <- log(t1_10$FtFreBody)
+t1_10$PrctFFB <- t1_10$PrctFFB^-1
+```
+
+Los siguientes incisos se harán para los componentes principales basados en la matriz de covarianza como en la matriz de correlaciones
+
+a) Determinemos el número de componentes que resumen adecuadamente la variabilidad
+
+```{r, echo=FALSE}
+comp_cov <-princomp(t1_10, cor = FALSE)
+comp_cor <-princomp(t1_10, cor = TRUE)
+```
+
+Usando la covarianza tenemos:
+```{r, echo=FALSE}
+summary(comp_cov, loadings = T)
+```
+
+
+```{r, echo=FALSE}
+fviz_screeplot(comp_cov)
+```
+
+Podemos ver la inflexión muy marcada del primero al tercer componente. El primer componente (que coincide con la variable original SaleWt) acumula 99% de la variabilidad
+
+Usando la correlación:
+```{r, echo=FALSE}
+summary(comp_cor, loadings = T)
+```
+
+```{r, echo=FALSE}
+fviz_screeplot(comp_cor)
+```
+
+Aquí la gráfica muestra una curva más suave, y es hasta el tercer componente que se acumula almenos 80% de la variabilidad, por lo que en este caso elegimos los tres primeros componentes para resumir la variabilidad.
+
+b) Interpretación de los componentes principales
+
+# Covarianza
+
+```{r , echo=FALSE}
+fviz_pca_biplot(comp_cov)
+```
+De la gráfica y de las cargas podemos ver que el primer componente coincide con SaleWt
+
+# Correlacion
+
+```{r , echo=FALSE}
+fviz_pca_biplot(comp_cor)
+```
+```{r, echo=FALSE}
+fviz_pca_biplot(comp_cor, axes = c(2,3))
+```
+
+De las gráficas y las cargas notamos que el primer componente es un contraste entre YrHgt, FtFreBody, Frame , SaleHt y SaleWt con las variables restantes. El segundo componente es un promedio ponderado con signo negativo de las variables y el tercer componente es un contraste.
+
+c)
+
+No es claro como crear un indice pues los componentes principales usando la covarianza es sólo una variable y usando la correlación son contrastes.
+
+
+
+## Pregunta 10
+Primero carguemos los datos del archivo T7-5.DAT
+```{r}
+t7_5 <- read.table("~/aplicada3/tarea3/T7-5.DAT", quote="\"", comment.char="")
+colnames(t7_5) <- c("tasa_carga", "tasa_descarga", "prof_descarga", "temperatura", "voltaje_fin", "ciclos")
+```
+
+Primero realizaremos una regresión con todas las variables
+
+```{r, echo=FALSE}
+m <- lm( log(ciclos) ~ ., data = t7_5)
+summary(m)
+```
+Como podemos ver, sólo uno de los regresores (temperatura) tiene un coeficiente significativo. Para contrastar, construiremos el modelo que tiene a temperatura como el único regresor.
+```{r, echo=FALSE}
+m2 <- lm( log(ciclos) ~ temperatura, data = t7_5)
+summary(m2)
+```
+
+
+
+
+Por último, para definir el subconjunto de regresores también podemos utilizar el método stepAIC de la libreria MASS :
+
+```{r, echo=FALSE}
+m3 <- stepAIC(m, 
+              scope = list(lower = ~ 1,
+                           upper = ~ .), 
+              direction = "both")  # muestra el proceso de ajuste
+```
+
+```{r, echo=FALSE}
+summary(m3)
+```
+
+De los tres modelos mostrados, vemos que tomar sólo la temperatura como regresor mejora la $R^2$ ajustada, así como el nivel de significancia de los coeficientes y de la regresión. Por otro lado, con el método stepAIC obtenemos un modelo con aun mejor $R^2$ ajustada. Así , elegimos el último modelo con los regresores: tasa_descara, temperatura y voltaje_fin
+
+Ahora graficaremos los residuales de nuestro modelo
+```{r echo=FALSE}
+ plot(m3, which = c(1,2))
+```
+
+De las gráficas no notamos una patente desviación de la normalidad. En la gráfica QQ hay una leve desviación en el centro de la gráfica.
+
+Ahora calcularemos los componentes principales:
+```{r echo=FALSE}
+comp_baterias <- princomp(t7_5[, 1:5])
+summary(comp_baterias, loadings=TRUE)
+
+```
+
+Notamos que la primer componente acumula 70% de la varianza. También se puede ver que las cargas (los eigenvalores de la matriz de covarianza) son los vectores canónicos, por lo que el método de componentes principales no está modificando las variables.
+
+Así, hacer la regresión con la primer componente principal es equivalente a hacer la regresión con la variable prof_descarga:
+
+```{r echo=FALSE}
+m4 <- lm(log(ciclos) ~ prof_descarga, data=t7_5)
+summary(m4)
+```
+Cómo podemos ver, la $R^2$ empeoró considerablemente. Creemos que las cargas de los componentes principales resultaron ser los vectores canónicos debido a que los regresores están muy poco correlacionados entre sí, por lo que la matriz de covarianzas era casi diagonal. Así mismo, de la siguiente gráfica podemos ver que prof_descarga no parece tener una fuerte correlación con ciclos, por lo que el modelo tuvo un muy mal desempeño. Así, a pesar de acumular la mayor parte de varianza de las observaciones, prof_descarga es un mal predictor del número de ciclos.
+
+```{r, echo=FALSE}
+plot(t7_5)
+```
+
