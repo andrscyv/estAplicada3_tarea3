@@ -195,59 +195,81 @@ fviz_pca_biplot(comp_cov, invisible=c("var"))
 Considerando los componentes basados en la covarianza vemos que hay dos candidatos a outliers la observación 50 y la 51
 
 e) Ahora evaluaremos si los dotas son normales. Para esto mostraremos las gráficas QQ de cada variable y la transformacion que le aplicaremos
-```{r}
+```{r, echo=FALSE}
 graficaQQ <- function (col, nom) {
-  qqnorm(col,  pch=1,frame=FALSE, main = paste("Gráfica QQ ", nom))
+  qqnorm(col, main = paste("Gráfica QQ ", nom))
   qqline(col, col = "steelblue",lwd=2)
 }
 ```
 
 # YrHgt
-```{r}
+```{r, echo=FALSE}
   graficaQQ(t1_10$YrHgt, "YrHgt")
 ```
+
+
 Parece ser aproximadamente normal
 
 # FtFreBody
 
-```{r}
+```{r, echo=FALSE}
   graficaQQ(t1_10$FtFreBody, "FtFreBody")
 ```
+
+
 Aplicando la transformacion logaritmo
-```{r}
+
+
+```{r, echo=FALSE}
   graficaQQ(log(t1_10$FtFreBody), "log(FtFreBody)")
 ```
 
 # PrctFFB
-```{r}
+```{r, echo=FALSE}
   graficaQQ(t1_10$PrctFFB, "PrctFFb")
 ```
+
+
 Utilizando el recíproco:
-```{r}
+
+
+```{r, echo=FALSE}
   graficaQQ(t1_10$PrctFFB^-1, "PrctFFb^-1")
 ```
 
 # Frame y BkFat
-```{r}
+```{r, echo=FALSE}
   graficaQQ(t1_10$Frame, "Frame")
 ```
-```{r}
+```{r, echo=FALSE}
   graficaQQ(t1_10$BkFat, "BkFat")
 ```
+
+
 Como podemos ver, estas variables tienen mediciones discretas por lo que no se aplicaron transformaciones.
+
+
 # SaleHt
-```{r}
+```{r, echo=FALSE}
   graficaQQ(t1_10$SaleHt, "SaleHt")
 ```
+
+
 Parece cumplir normalidad
 
-#SaleWt
-```{r}
+
+# SaleWt
+```{r, echo=FALSE}
   graficaQQ(t1_10$SaleWt, "SaleWt")
 ```
+
+
 Parece cumplir normalidad
 
+
 Pasamos a transformar nuestros datos
+
+
 ```{r}
 t1_10$FtFreBody <- log(t1_10$FtFreBody)
 t1_10$PrctFFB <- t1_10$PrctFFB^-1
